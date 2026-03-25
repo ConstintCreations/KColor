@@ -1,7 +1,22 @@
 import argparse
 import requests
 import re
+import os
 import sys
+import json
+
+PALETTES_FILE = "palettes.json"
+
+def load_palettes():
+    if not os.path.exists(PALETTES_FILE):
+        return {}
+    with open(PALETTES_FILE, "r") as file:
+        return json.load(file)
+
+def save_palettes(palettes):
+    with open(PALETTES_FILE, "w") as file:
+        json.dump(palettes, file, indent=4)
+
 
 def identifyColor(color_string):
     if re.fullmatch(r"#?[0-9a-f]{6}", color_string):
@@ -14,6 +29,59 @@ def identifyColor(color_string):
         return "cmyk"
     else:
         return None
+    
+def convertColorsToRGB(color_string, color_format):
+    colorR = None
+    colorG = None
+    colorB = None
+
+    if color_format == "rgb":
+        if color_string.startswith("rgb(") and color_string.endswith(")"):
+            color_string = color_string[4:-1]
+
+        colorR, colorG, colorB = [int(part.strip()) for part in color_string.split(",")]
+    elif color_format == "hex":
+        if color_string.startswith("#"):
+            color_string = color_string[1:]
+
+        colorR, colorG, colorB = int(color_string[0:2], 16), int(color_string[2:4], 16), int(color_string[4:6], 16)
+    elif color_format == "hsl":
+        if color_string.startswith("hsl(") and color_string.endswith(")"):
+            color_string = color_string[4:-1]
+        
+        h, s, l = [float(part.strip().strip("%")) for part in color_string.split(",")]
+
+        s /= 100
+        l /= 100
+        c = (1 - abs(2*l - 1)) * s
+        x = c * (1 - abs((h/60) %2-1))
+        m = l - c/2
+
+        if 0 <= h < 60:
+            colorR, colorG, colorB = round((c + m) * 255), round((x + m) * 255), round((0 + m) * 255)
+        elif 60 <= h < 120:
+            colorR, colorG, colorB = round((x + m) * 255), round((c + m) * 255), round((0 + m) * 255)
+        elif 120 <= h < 180:
+            colorR, colorG, colorB = round((0 + m) * 255), round((c + m) * 255), round((x + m) * 255)
+        elif 180 <= h < 240:
+            colorR, colorG, colorB = round((0 + m) * 255), round((x + m) * 255), round((c + m) * 255)
+        elif 240 <= h < 300:
+            colorR, colorG, colorB = round((x + m) * 255), round((0 + m) * 255), round((c + m) * 255)
+        else:
+            colorR, colorG, colorB = round((c + m) * 255), round((0 + m) * 255), round((x + m) * 255)
+
+    elif color_format == "cmyk":
+        if color_string.startswith("cmyk(") and color_string.endswith(")"):
+            color_string = color_string[5:-1]
+
+        c, m, y, k = [int(part.strip())/100 for part in color_string.split(",")]
+
+        colorR, colorB, colorG = round(255 * (1 - c) * (1 - k)), round(255 * (1 - m) * (1 - k)), round(255 * (1 - y) * (1 - k))
+    else:
+        print(f"\nPlease enter valid HEX, RGB, HSL, or CMYK codes\n\nExamples:\nHex : \"#0047ab\" or \"0047ab\"\nRGB : \"rgb(0,71,171)\" or \"0,71,171\"\nHSL : \"hsl(215,100%,34%)\" or \"215,100%,34%\"\nCMYK: \"cmyk(100,58,0,33)\" or \"100,58,0,33\"\n")
+        sys.exit(1)
+
+    return colorR, colorG, colorB
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers(dest="command")
@@ -24,17 +92,17 @@ info_parser.add_argument("-f", "--full", help="Shows all avaliable color informa
 
 
 palette_parser = subparsers.add_parser("palette", help="Manage color palettes")
-palette_subparsers = palette_parser.add_subparsers(dest="action")
+palette_subparsers = palette_parser.add_subparsers(dest="action", required=True)
 
 create_parser = palette_subparsers.add_parser("create", help="Creates a new color palette")
 create_parser.add_argument("name", type=str, help="Palette name")
 create_parser.add_argument("colors", type=str, nargs="+", help="HEX, RGB, HSL, or CMYK codes of the colors in the palette")
 
-show_parser = palette_subparsers.add_parser("Show", help="Shows color palettes")
+show_parser = palette_subparsers.add_parser("show", help="Shows color palettes")
 show_parser.add_argument("name", nargs="?", help="Specify a palette to show")
 
-edit_parser = palette_subparsers.add_parser("Edit", help="Edits a color palette")
-edit_parser.add_argument("name", "Palette name")
+edit_parser = palette_subparsers.add_parser("edit", help="Edits a color palette")
+edit_parser.add_argument("name", type=str, help="Palette name")
 
 group = edit_parser.add_mutually_exclusive_group(required=True)
 group.add_argument("-a", "--add", type=str, nargs="+", help="Adds colors in the HEX, RGB, HSL, or CMYK format to the palette")
@@ -42,7 +110,7 @@ group.add_argument("-s", "--set", type=str, nargs="+", help="Sets colors at spec
 group.add_argument("-r", "--remove", type=int, nargs="+", help="Removes colors from the palette at the specified indexes")
 
 delete_parser = palette_subparsers.add_parser("delete", help="Deletes a color palette")
-delete_parser.add_argument("name", type="str", help="Palette name")
+delete_parser.add_argument("name", type=str, help="Palette name")
 
 clear_parser = palette_subparsers.add_parser("clear", help="Deletes all color palettes")
 clear_parser.add_argument("--confirm", action="store_true", help="Confirms deletion of all color palettes")
@@ -82,3 +150,46 @@ if args.command == "info":
         print(f"HSL: {parsed["hsl"]["value"]}")
         print(f"\nBest Text Color: {"\033[38;2;255;255;255m\u2588\u2588\033[0m White" if parsed["contrast"]["value"] == "#ffffff" else "\033[38;2;0;0;0m\u2588\u2588\033[0m Black"}\n")
 
+elif args.command == "palette":
+    if args.action == "create":
+        palettes = load_palettes()
+
+        if args.name in palettes:
+            print(f"\nColor palette with name \"{args.name}\" already exists\nIf you wish to edit that palette, use \"palette edit {args.name}\"\n")
+            sys.exit(1)
+
+        color_list = []
+        for color_string in args.colors:
+            color = color_string.strip().lower()
+            color_format = identifyColor(color)
+
+            colorR, colorG, colorB = convertColorsToRGB(color, color_format)
+
+            colorHEX = f"#{colorR:02X}{colorG:02X}{colorB:02X}"
+
+            color_list.append({"colorBox": f"\033[38;2;{colorR};{colorG};{colorB}m\u2588\u2588\033[0m", "hex": colorHEX})
+        
+        palettes[args.name] = color_list
+        save_palettes(palettes)
+
+        print(f"\nPalette Created:\n\n{args.name}:")
+        for i, color in enumerate(palettes[args.name]):
+            print(f"[{i}] {color["colorBox"]} {color["hex"]}")
+            
+
+            
+
+            
+
+    elif args.action == "show":
+        print("Show Palette")
+    elif args.action == "edit":
+        print("Edit Palette")
+    elif args.action == "delete":
+        print("Delete Palette")
+    elif args.action == "clear":
+        if args.confirm:
+            save_palettes({})
+            print("\nAll color palettes have been deleted\n")
+        else:
+            print("\n\U000026A0 Warning: This will delete all saved color palettes \U000026A0\n\n     To proceed with the deletion, use --confirm\n")
