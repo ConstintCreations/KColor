@@ -23,6 +23,29 @@ info_parser.add_argument("color", type=str, help="HEX, RGB, HSL, or CMYK of the 
 info_parser.add_argument("-f", "--full", help="Shows all avaliable color information, including less common color formats", action="store_true")
 
 
+palette_parser = subparsers.add_parser("palette", help="Manage color palettes")
+palette_subparsers = palette_parser.add_subparsers(dest="action")
+
+create_parser = palette_subparsers.add_parser("create", help="Creates a new color palette")
+create_parser.add_argument("name", type=str, help="Palette name")
+create_parser.add_argument("colors", type=str, nargs="+", help="HEX, RGB, HSL, or CMYK codes of the colors in the palette")
+
+show_parser = palette_subparsers.add_parser("Show", help="Shows color palettes")
+show_parser.add_argument("name", nargs="?", help="Specify a palette to show")
+
+edit_parser = palette_subparsers.add_parser("Edit", help="Edits a color palette")
+edit_parser.add_argument("name", "Palette name")
+
+group = edit_parser.add_mutually_exclusive_group(required=True)
+group.add_argument("-a", "--add", type=str, nargs="+", help="Adds colors in the HEX, RGB, HSL, or CMYK format to the palette")
+group.add_argument("-s", "--set", type=str, nargs="+", help="Sets colors at specific indexes using the format index:color")
+group.add_argument("-r", "--remove", type=int, nargs="+", help="Removes colors from the palette at the specified indexes")
+
+delete_parser = palette_subparsers.add_parser("delete", help="Deletes a color palette")
+delete_parser.add_argument("name", type="str", help="Palette name")
+
+clear_parser = palette_subparsers.add_parser("clear", help="Deletes all color palettes")
+clear_parser.add_argument("--confirm", action="store_true", help="Confirms deletion of all color palettes")
 
 args = parser.parse_args()
 
@@ -59,5 +82,3 @@ if args.command == "info":
         print(f"HSL: {parsed["hsl"]["value"]}")
         print(f"\nBest Text Color: {"\033[38;2;255;255;255m\u2588\u2588\033[0m White" if parsed["contrast"]["value"] == "#ffffff" else "\033[38;2;0;0;0m\u2588\u2588\033[0m Black"}\n")
 
-#print(" [\U0001F512]      [\U0001F512]")
-#print(" \033[38;2;171;192;222m \u2588\u2588 \033[0m \033[38;2;171;192;222m \u2588\u2588 \033[0m \033[38;2;171;192;222m \u2588\u2588 \033[0m")
