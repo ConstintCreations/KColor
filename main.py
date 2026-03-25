@@ -167,26 +167,53 @@ elif args.command == "palette":
 
             colorHEX = f"#{colorR:02X}{colorG:02X}{colorB:02X}"
 
-            color_list.append({"colorBox": f"\033[38;2;{colorR};{colorG};{colorB}m\u2588\u2588\033[0m", "hex": colorHEX})
+            color_list.append({"colorBox": f"\033[38;2;{colorR};{colorG};{colorB}m\u2588\u2588\033[0m", "hex": colorHEX.lower()})
         
         palettes[args.name] = color_list
         save_palettes(palettes)
 
         print(f"\nPalette Created:\n\n{args.name}:")
         for i, color in enumerate(palettes[args.name]):
-            print(f"[{i}] {color["colorBox"]} {color["hex"]}")
-            
-
-            
-
-            
+            print(f"[{i+1}] {color["colorBox"]} {color["hex"]}")
+        print("")
 
     elif args.action == "show":
-        print("Show Palette")
+        palettes = load_palettes()
+
+        if args.name:
+            if not(args.name in palettes):
+                print(f"\nNo color palette with the name \"{args.name}\" was found\n")
+                sys.exit(1)
+            print(f"\n{args.name}:")
+            for i, color in enumerate(palettes[args.name]):
+                print(f"[{i+1}] {color["colorBox"]} {color["hex"]}")
+            print("")
+
+        if len(palettes) == 0:
+            print("\nNo color palettes were found\nCreate one with \"palette create\"\n")
+            sys.exit(1)
+        
+        print("\nAll Palettes:")
+
+        for palette in palettes:
+            print(f"\n{palette}:")
+            for i, color in enumerate(palettes[palette]):
+                print(f"[{i+1}] {color["colorBox"]} {color["hex"]}")
+        print("")
+        
     elif args.action == "edit":
+        
         print("Edit Palette")
+
     elif args.action == "delete":
-        print("Delete Palette")
+        palettes = load_palettes()
+        if args.name in palettes:
+            del palettes[args.name]
+            save_palettes(palettes)
+            print(f"\nColor palette with the name \"{args.name}\" was successfully deleted\n")
+        else:
+            print(f"\nNo color palette with the name \"{args.name}\" was found\n")
+            sys.exit(1)
     elif args.action == "clear":
         if args.confirm:
             save_palettes({})
