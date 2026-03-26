@@ -464,7 +464,7 @@ elif args.command == "generator":
 
         save_palettes(palettes)
 
-        print(f"Generated Palette Saved:\n\n{settings["name"]}:")
+        print(f"\nGenerated Palette Saved:\n\n{settings["name"]}:")
         for i, color in enumerate(palettes[settings["name"]]):
             print(f"[{i+1}] {color["colorBox"]} {color["hex"]}")
         print("")
@@ -658,54 +658,3 @@ elif args.command == "generator":
         for i, color in enumerate(generation):
             print(f"[{i+1}] [{"L" if color["locked"] == True else " "}] {color["colorBox"]} {color["hex"]}")
         print("")
-
-"""
-changes = []
-            for pair in args.set:
-                try:
-                    index_string, color_string = pair.split(":")
-                    index = int(index_string)
-
-                    color = color_string.strip().lower()
-                    color_format = identifyColor(color)
-
-                    colorR, colorG, colorB = convertColorsToRGB(color, color_format, pair)
-
-                    colorHEX = f"#{colorR:02X}{colorG:02X}{colorB:02X}"
-
-                    changes.append({"index": f"{index}", "colorBox": f"\033[38;2;{colorR};{colorG};{colorB}m\u2588\u2588\033[0m", "hex": colorHEX.lower()})
-                except ValueError:
-                    print(f"\nInvalid format provided for \"{pair}\"\nPlease use the format index:color\n")
-                    sys.exit(1)
-            
-            edited_indexes = []
-
-            for change in changes:
-                for index, _ in enumerate(palettes[args.name]):
-                    if int(change["index"])-1 == index:
-                        edited_indexes.append(change["index"])
-                        palettes[args.name][index] = {"colorBox": change["colorBox"], "hex": change["hex"]}
-
-            save_palettes(palettes)
-
-            if len(edited_indexes) == 0:
-                print(f"\nNo colors were found at the provided indexes\n")
-                sys.exit(1)
-
-            edited_indexes_string = ""
-            edited_indexes = [str(index) for index in edited_indexes]
-            if len(edited_indexes) == 1:
-                edited_indexes_string = edited_indexes[0]
-            elif len(edited_indexes) == 2:
-                edited_indexes_string = edited_indexes[0] + " and " + edited_indexes[1]
-            elif len(edited_indexes) > 2:
-                edited_indexes_string = ", ".join(edited_indexes[:-1]) + ", and " + edited_indexes[-1]
-
-            print(f"\n{"Color" if len(edited_indexes) == 1 else "Colors"} edited at {"index" if len(edited_indexes) == 1 else "indexes"} {edited_indexes_string}")
-                
-
-        print(f"\nNew Color Palette:\n\n{args.name}:")
-        for i, color in enumerate(palettes[args.name]):
-            print(f"[{i+1}] {color["colorBox"]} {color["hex"]}")
-        print("")
-"""
