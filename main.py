@@ -154,9 +154,12 @@ settings_parser.add_argument("-c", "--count", type=int, help="Sets the number of
 settings_parser.add_argument("-s", "--scheme", type=str, help="Sets the color scheme (random, monochrome, monochrome-dark, monochrome-light, analogic, complement, analogic-complement, triad [count must be 3], or quad [count must be 4])")
 settings_parser.add_argument("-n", "--name", type=str, help="Changes the active color palette's name in the generator")
 
-generator_show_parser = generator_subparsers.add_parser("show", help="Shows the generator's last generation", action="store_true")
+generator_show_parser = generator_subparsers.add_parser("show", help="Shows the generator's last generation")
 
-lock_parser = generator_subparsers.add_parser("lock", type=int, nargs="+", help="Locks the colors at the given indexes")
+lock_parser = generator_subparsers.add_parser("lock", help="Locks the colors at the given indexes")
+lock_parser.add_argument("indexes", type=int, nargs="+", help="Indexes to lock the colors at")
+unlock_parser = generator_subparsers.add_parser("unlock", help="Unlocks the colors at the given indexes")
+unlock_parser.add_argument("indexes", type=int, nargs="+", help="Indexes to unlock the colors at")
 
 save_parser = generator_subparsers.add_parser("save", help="Saves the last generated color palette")
 save_parser.add_argument("name", type=str, nargs="?", help="Uses this name for the saved color palette")
@@ -379,7 +382,7 @@ elif args.command == "palette":
             print("\n\U000026A0 Warning: This will delete all saved color palettes \U000026A0\n\n     To proceed with the deletion, use --confirm\n")
 elif args.command == "generator":
     if args.action == "show":
-        generator = load_generator()["generation"]
+        generator = load_generator()
         settings = generator["settings"]
         generation = generator["generation"]
 
@@ -402,4 +405,6 @@ elif args.command == "generator":
     elif args.action == "generate":
         print(load_generator())
     elif args.action == "lock":
+        print(load_generator())
+    elif args.action == "unlock":
         print(load_generator())
