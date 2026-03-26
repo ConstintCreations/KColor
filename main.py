@@ -30,7 +30,7 @@ def identifyColor(color_string):
     else:
         return None
     
-def convertColorsToRGB(color_string, color_format):
+def convertColorsToRGB(color_string, color_format, pair=None):
     colorR = None
     colorG = None
     colorB = None
@@ -78,7 +78,10 @@ def convertColorsToRGB(color_string, color_format):
 
         colorR, colorB, colorG = round(255 * (1 - c) * (1 - k)), round(255 * (1 - m) * (1 - k)), round(255 * (1 - y) * (1 - k))
     else:
-        print(f"\nPlease enter valid HEX, RGB, HSL, or CMYK codes\n\nExamples:\nHex : \"#0047ab\" or \"0047ab\"\nRGB : \"rgb(0,71,171)\" or \"0,71,171\"\nHSL : \"hsl(215,100%,34%)\" or \"215,100%,34%\"\nCMYK: \"cmyk(100,58,0,33)\" or \"100,58,0,33\"\n")
+        if pair == None:
+            print(f"\nPlease enter valid HEX, RGB, HSL, or CMYK codes\n\nExamples:\nHex : \"#0047ab\" or \"0047ab\"\nRGB : \"rgb(0,71,171)\" or \"0,71,171\"\nHSL : \"hsl(215,100%,34%)\" or \"215,100%,34%\"\nCMYK: \"cmyk(100,58,0,33)\" or \"100,58,0,33\"\n")
+        else:
+            print(f"\nInvalid format provided for \"{pair}\"\nPlease use the format index:color\n\nPlease enter valid HEX, RGB, HSL, or CMYK codes for the color\n\nExamples:\nHex : \"#0047ab\" or \"0047ab\"\nRGB : \"rgb(0,71,171)\" or \"0,71,171\"\nHSL : \"hsl(215,100%,34%)\" or \"215,100%,34%\"\nCMYK: \"cmyk(100,58,0,33)\" or \"100,58,0,33\"\n")
         sys.exit(1)
 
     return colorR, colorG, colorB
@@ -188,6 +191,7 @@ elif args.command == "palette":
             for i, color in enumerate(palettes[args.name]):
                 print(f"[{i+1}] {color["colorBox"]} {color["hex"]}")
             print("")
+            sys.exit(0)
 
         if len(palettes) == 0:
             print("\nNo color palettes were found\nCreate one with \"palette create\"\n")
@@ -202,15 +206,122 @@ elif args.command == "palette":
         print("")
         
     elif args.action == "edit":
-        
-        print("Edit Palette")
+        palettes = load_palettes()
+        if not(args.name in palettes):
+            print(f"\nNo color palette with the name \"{args.name}\" was found\n")
+            sys.exit(1)
 
+        if args.add:
+            
+            color_list = []
+            for color_string in args.add:
+                color = color_string.strip().lower()
+                color_format = identifyColor(color)
+
+                colorR, colorG, colorB = convertColorsToRGB(color, color_format)
+
+                colorHEX = f"#{colorR:02X}{colorG:02X}{colorB:02X}"
+
+                color_list.append({"colorBox": f"\033[38;2;{colorR};{colorG};{colorB}m\u2588\u2588\033[0m", "hex": colorHEX.lower()})
+            
+            palettes[args.name] = palettes[args.name] + color_list
+            save_palettes(palettes)
+
+            print(f"\nColors added")
+
+        elif args.remove:
+            new_palette = []
+
+            removed_indexes = []
+
+            for index, color in enumerate(palettes[args.name]):
+                if not((index+1) in args.remove):
+                    new_palette.append(color)
+                else:
+                    removed_indexes.append(index+1)
+
+            if len(new_palette) == 0:
+                print(f"\nEmpty color palette with the name \"{args.name}\" was deleted\n")
+                del palettes[args.name]
+                save_palettes(palettes)
+                sys.exit(0)
+
+            palettes[args.name] = new_palette
+            save_palettes(palettes)
+
+
+            if len(removed_indexes) == 0:
+                print(f"\nNo colors were found at the provided indexes\n")
+                sys.exit(1)
+
+            removed_indexes_string = ""
+            removed_indexes = [str(index) for index in removed_indexes]
+            if len(removed_indexes) == 1:
+                removed_indexes_string = removed_indexes[0]
+            elif len(removed_indexes) == 2:
+                removed_indexes_string = removed_indexes[0] + " and " + removed_indexes[1]
+            elif len(removed_indexes) > 2:
+                removed_indexes_string = ", ".join(removed_indexes[:-1]) + ", and " + removed_indexes[-1]
+
+            print(f"\n{"Color" if len(removed_indexes) == 1 else "Colors"} removed at {"index" if len(removed_indexes) == 1 else "indexes"} {removed_indexes_string}")
+
+
+
+        elif args.set:
+            changes = []
+            for pair in args.set:
+                try:
+                    index_string, color_string = pair.split(":")
+                    index = int(index_string)
+
+                    color = color_string.strip().lower()
+                    color_format = identifyColor(color)
+
+                    colorR, colorG, colorB = convertColorsToRGB(color, color_format, pair)
+
+                    colorHEX = f"#{colorR:02X}{colorG:02X}{colorB:02X}"
+
+                    changes.append({"index": f"{index}", "colorBox": f"\033[38;2;{colorR};{colorG};{colorB}m\u2588\u2588\033[0m", "hex": colorHEX.lower()})
+                except ValueError:
+                    print(f"\nInvalid format provided for \"{pair}\"\nPlease use the format index:color\n")
+                    sys.exit(1)
+            
+            edited_indexes = []
+
+            for change in changes:
+                for index, _ in enumerate(palettes[args.name]):
+                    if int(change["index"])-1 == index:
+                        edited_indexes.append(change["index"])
+                        palettes[args.name][index] = {"colorBox": change["colorBox"], "hex": change["hex"]}
+
+            save_palettes(palettes)
+
+            if len(edited_indexes) == 0:
+                print(f"\nNo colors were found at the provided indexes\n")
+                sys.exit(1)
+
+            edited_indexes_string = ""
+            edited_indexes = [str(index) for index in edited_indexes]
+            if len(edited_indexes) == 1:
+                edited_indexes_string = edited_indexes[0]
+            elif len(edited_indexes) == 2:
+                edited_indexes_string = edited_indexes[0] + " and " + edited_indexes[1]
+            elif len(edited_indexes) > 2:
+                edited_indexes_string = ", ".join(edited_indexes[:-1]) + ", and " + edited_indexes[-1]
+
+            print(f"\n{"Color" if len(edited_indexes) == 1 else "Colors"} edited at {"index" if len(edited_indexes) == 1 else "indexes"} {edited_indexes_string}")
+                
+
+        print(f"\nNew Color Palette:\n\n{args.name}:")
+        for i, color in enumerate(palettes[args.name]):
+            print(f"[{i+1}] {color["colorBox"]} {color["hex"]}")
+        print("")
     elif args.action == "delete":
         palettes = load_palettes()
         if args.name in palettes:
             del palettes[args.name]
             save_palettes(palettes)
-            print(f"\nColor palette with the name \"{args.name}\" was successfully deleted\n")
+            print(f"Color palette with the name \"{args.name}\" was successfully deleted\n")
         else:
             print(f"\nNo color palette with the name \"{args.name}\" was found\n")
             sys.exit(1)
