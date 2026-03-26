@@ -6,6 +6,7 @@ import sys
 import json
 
 PALETTES_FILE = "palettes.json"
+GENERATOR_FILE = "generator.json"
 
 def load_palettes():
     if not os.path.exists(PALETTES_FILE):
@@ -16,6 +17,16 @@ def load_palettes():
 def save_palettes(palettes):
     with open(PALETTES_FILE, "w") as file:
         json.dump(palettes, file, indent=4)
+
+def load_generator_settings():
+    if not os.path.exists(GENERATOR_FILE):
+        return {}
+    with open(GENERATOR_FILE, "r") as file:
+        return json.load(file)
+
+def save_generator_settings(settings):
+    with open(GENERATOR_FILE, "w") as file:
+        json.dump(settings, file, indent=4)
 
 
 def identifyColor(color_string):
