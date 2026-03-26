@@ -4,6 +4,7 @@ import re
 import os
 import sys
 import json
+import random
 
 PALETTES_FILE = "palettes.json"
 GENERATOR_FILE = "generator.json"
@@ -390,7 +391,7 @@ elif args.command == "generator":
             print("\n   No generated palette avaliable\nUse \"generator generate\" to make one\n")
             sys.exit(1)
         
-        print(f"\nLast Palette Generated:\n\n{settings["name"]}:\n")
+        print(f"\nLast Palette Generated:\n\n{settings["name"]}:")
 
         for i, color in enumerate(generation):
             print(f"[{i+1}] [{"L" if color["locked"] == True else " "}] {color["colorBox"]} {color["hex"]}")
@@ -403,13 +404,17 @@ elif args.command == "generator":
         if args.base:
             color_string = args.base.strip().lower()
 
-            color_format = identifyColor(color_string)
+            if color_string == "random":
+                settings["base"] = "random"
+            else:
 
-            colorR, colorG, colorB = convertColorsToRGB(color_string, color_format)
+                color_format = identifyColor(color_string)
 
-            colorHEX = f"#{colorR:02X}{colorG:02X}{colorB:02X}" 
+                colorR, colorG, colorB = convertColorsToRGB(color_string, color_format)
 
-            settings["base"] = colorHEX.lower()
+                colorHEX = f"#{colorR:02X}{colorG:02X}{colorB:02X}" 
+
+                settings["base"] = colorHEX.lower()
         if args.scheme:
             valid_schemes = ["random", "monochrome", "monochrome-dark", "monochrome-light", "analogic", "complement", "analogic-complement", "triad", "quad"]
             scheme = args.scheme.strip().lower()
@@ -442,7 +447,82 @@ elif args.command == "generator":
     elif args.action == "load":
         print(load_generator())
     elif args.action == "generate":
-        print(load_generator())
+        generator = load_generator()
+        override_settings = generator["settings"]
+        generation = generator["generation"]
+
+        valid_schemes = ["random", "monochrome", "monochrome-dark", "monochrome-light", "analogic", "complement", "analogic-complement", "triad", "quad"]
+
+        if args.base:
+            color_string = args.base.strip().lower()
+
+            if color_string == "random":
+                override_settings["base"] = "random"
+            else:
+
+                color_format = identifyColor(color_string)
+
+                colorR, colorG, colorB = convertColorsToRGB(color_string, color_format)
+
+                colorHEX = f"#{colorR:02X}{colorG:02X}{colorB:02X}" 
+
+                override_settings["base"] = colorHEX.lower()
+        if args.scheme:
+            scheme = args.scheme.strip().lower()
+
+            if not(scheme in valid_schemes):
+                print(f"\n        Invalid scheme provided\nPlease use one of the following schemes: \n\n{"\n".join(valid_schemes)}\n")
+                sys.exit(1)
+            else:
+                override_settings["scheme"] = scheme
+                if scheme == "triad":
+                    override_settings["count"] = 3
+                elif scheme == "quad":
+                    override_settings["count"] = 4
+        if args.count:
+            count = int(args.count)
+            if (override_settings["scheme"] == "triad" and count != 3) or (override_settings["scheme"] == "quad" and count != 4):
+                print(f"\nCannot change count from {override_settings["count"]} while the {override_settings["scheme"].capitalize()} scheme is selected\n")
+                sys.exit(1)
+            elif count < 2 or count > 100:
+                print(f"\n     Count was not changed\nCount must be between 2 and 100\n")
+                sys.exit(1)
+            else:
+                override_settings["count"] = count
+
+        if override_settings["base"] == "random":
+            override_settings["base"] = "".join(f"{random.randint(0,15):X}" for _ in range(6))
+        else:
+            override_settings["base"] = override_settings["base"][1:] if override_settings["base"].startswith("#") else override_settings["base"]
+
+        if override_settings["scheme"] == "random":
+            override_settings["scheme"] = random.choice(valid_schemes[1:-2])
+
+        req = requests.get(f"https://www.thecolorapi.com/scheme?hex={override_settings["base"]}&mode={override_settings["scheme"]}&count={override_settings["count"]}")
+        if req.status_code != 200:
+            print("\nUnexpected error generating color palette\n")
+            sys.exit(1)
+        parsed = req.json()
+
+        colors = parsed["colors"]
+
+        new_colors = []
+
+        for i, color in enumerate(colors):
+            if i < len(generation) and generation[i].get("locked"):
+                new_colors.append(generation[i])
+            else:
+                new_colors.append({"colorBox": f"\033[38;2;{color["rgb"]["r"]};{color["rgb"]["g"]};{color["rgb"]["b"]}m\u2588\u2588\033[0m", "hex": color["hex"]["value"].lower(), "locked": False})
+
+        generator["generation"] = new_colors
+        save_generator(generator)
+
+        print(f"\nPalette Generated:\n\n{override_settings["name"]}:")
+
+        for i, color in enumerate(new_colors):
+            print(f"[{i+1}] [{"L" if color["locked"] == True else " "}] {color["colorBox"]} {color["hex"]}")
+        print("")
+
     elif args.action == "lock":
         print(load_generator())
     elif args.action == "unlock":
