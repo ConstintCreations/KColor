@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kcolor"
+version = "0.0.1"
+description = "KColor is a command-line tool for creating, managing, and generating color palettes"
+authors = [
+    {name="ConstintCreations"}
+]
+readme = "README.md"
+license = GPL-3.0-only
+license-files = ["LICENSE"]
+
+requires-python = ">=3.8"
+
+dependencies = [
+    "requests"
+]
+
+[project.scripts]
+kcolor = "kcolor.main:main"
+
+keywords = ["cli", "colors", "palettes", "generator"]
+
+classifiers = [
+    "Topic :: Utilites",
+    "Development Status :: 3- Alpha",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3.0",
+    "Intended Audience :: End Users/Desktop",
+    "Natural Language :: English"
+]
+
+[project.urls]
+Homepage = "https://github.com/ConstintCreations/KColor"
+Repository = "https://github.com/ConstintCreations/KColor"
