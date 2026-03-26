@@ -18,15 +18,25 @@ def save_palettes(palettes):
     with open(PALETTES_FILE, "w") as file:
         json.dump(palettes, file, indent=4)
 
-def load_generator_settings():
+def load_generator():
     if not os.path.exists(GENERATOR_FILE):
-        return {}
+        return {
+            "settings": {
+                "base": "random",
+                "mode": "random",
+                "count": 5,
+                "name": "New Palette"
+            },
+            "generation": [
+
+            ]
+        }
     with open(GENERATOR_FILE, "r") as file:
         return json.load(file)
 
-def save_generator_settings(settings):
+def save_generator(generator):
     with open(GENERATOR_FILE, "w") as file:
-        json.dump(settings, file, indent=4)
+        json.dump(generator, file, indent=4)
 
 
 def identifyColor(color_string):
@@ -144,7 +154,9 @@ settings_parser.add_argument("-c", "--count", type=int, help="Sets the number of
 settings_parser.add_argument("-s", "--scheme", type=str, help="Sets the color scheme (random, monochrome, monochrome-dark, monochrome-light, analogic, complement, analogic-complement, triad [count must be 3], or quad [count must be 4])")
 settings_parser.add_argument("-n", "--name", type=str, help="Changes the active color palette's name in the generator")
 
-generator_show_parser = generator_subparsers.add_parser("show", help="Shows the generator's last generation")
+generator_show_parser = generator_subparsers.add_parser("show", help="Shows the generator's last generation", action="store_true")
+
+lock_parser = generator_subparsers.add_parser("lock", type=int, nargs="+", help="Locks the colors at the given indexes")
 
 save_parser = generator_subparsers.add_parser("save", help="Saves the last generated color palette")
 save_parser.add_argument("name", type=str, nargs="?", help="Uses this name for the saved color palette")
@@ -365,3 +377,29 @@ elif args.command == "palette":
             print("\nAll color palettes have been deleted\n")
         else:
             print("\n\U000026A0 Warning: This will delete all saved color palettes \U000026A0\n\n     To proceed with the deletion, use --confirm\n")
+elif args.command == "generator":
+    if args.action == "show":
+        generator = load_generator()["generation"]
+        settings = generator["settings"]
+        generation = generator["generation"]
+
+        if len(generation) == 0:
+            print("\n   No generated palette avaliable\nUse \"generator generate\" to make one\n")
+            sys.exit(1)
+        
+        print(f"\nLast Palette Generated:\n\n{settings["name"]}:\n")
+
+        for i, color in enumerate(generation):
+            print(f"[{i+1}] [{"L" if color["locked"] == True else " "}] {color["colorBox"]} {color["hex"]}")
+        print("")
+
+    elif args.action == "settings":
+        print(load_generator())
+    elif args.action == "save":
+        print(load_generator())
+    elif args.action == "load":
+        print(load_generator())
+    elif args.action == "generate":
+        print(load_generator())
+    elif args.action == "lock":
+        print(load_generator())
