@@ -146,12 +146,12 @@ def main():
     generator_subparsers = generator_parser.add_subparsers(dest="action", required=True)
 
     generate_parser = generator_subparsers.add_parser("generate", help="Generate a color palette using the generator's settings")
-    generate_parser.add_argument("-b", "--base", type=str, help="Overrides the base color for the generator to use for the current generation (random or a HEX, RGB, HSV, or CMYK color code)")
+    generate_parser.add_argument("-b", "--base", type=str, help="Overrides the base color for the generator to use for the current generation (random or a HEX, RGB, HSL, or CMYK color code)")
     generate_parser.add_argument("-c", "--count", type=int, help="Overrides the number of colors to generate in the color palette for the current generation")
     generate_parser.add_argument("-s", "--scheme", type=str, help="Overrides the color scheme for the current generation (random, monochrome, monochrome-dark, monochrome-light, analogic, complement, analogic-complement, triad [count must be 3], or quad [count must be 4])")
 
     settings_parser = generator_subparsers.add_parser("settings", help="Change the generator's settings")
-    settings_parser.add_argument("-b", "--base", type=str, help="Sets the base color for the generator to use (random or a HEX, RGB, HSV, or CMYK color code)")
+    settings_parser.add_argument("-b", "--base", type=str, help="Sets the base color for the generator to use (random or a HEX, RGB, HSL, or CMYK color code)")
     settings_parser.add_argument("-c", "--count", type=int, help="Sets the number of colors to generate in the color palette")
     settings_parser.add_argument("-s", "--scheme", type=str, help="Sets the color scheme (random, monochrome, monochrome-dark, monochrome-light, analogic, complement, analogic-complement, triad [count must be 3], or quad [count must be 4])")
     settings_parser.add_argument("-n", "--name", type=str, help="Changes the active color palette's name in the generator")
