@@ -443,7 +443,32 @@ elif args.command == "generator":
 
         print(f"\nGenerator Settings:\n\nBase  : {"Random" if settings["base"] == "random" else settings["base"]}\nScheme: {"Random" if settings["scheme"] == "random" else f"{" ".join(word.capitalize() for word in settings["scheme"].replace("-", " ").split())}"}\nCount : {settings["count"]}\nName  : {settings["name"]}\n")
     elif args.action == "save":
-        print(load_generator())
+        palettes = load_palettes()
+        generator = load_generator()
+        settings = generator["settings"]
+        generation = generator["generation"].copy()
+
+        if len(generation) == 0:
+            print("\n   No generated palette avaliable\nUse \"generator generate\" to make one\n")
+            sys.exit(1)
+
+        if args.name:
+            settings["name"] = args.name
+            generator["settings"] = settings
+            save_generator(generator)
+
+        for i, _ in enumerate(generation):
+            del generation[i]["locked"]
+
+        palettes[settings["name"]] = generation
+
+        save_palettes(palettes)
+
+        print(f"Generated Palette Saved:\n\n{settings["name"]}:")
+        for i, color in enumerate(palettes[settings["name"]]):
+            print(f"[{i+1}] {color["colorBox"]} {color["hex"]}")
+        print("")
+
     elif args.action == "load":
         print(load_generator())
     elif args.action == "generate":
