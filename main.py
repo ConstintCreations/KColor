@@ -98,7 +98,7 @@ def convertColorsToRGB(color_string, color_format, pair=None):
 
         c, m, y, k = [int(part.strip())/100 for part in color_string.split(",")]
 
-        colorR, colorB, colorG = round(255 * (1 - c) * (1 - k)), round(255 * (1 - m) * (1 - k)), round(255 * (1 - y) * (1 - k))
+        colorR, colorG, colorB = round(255 * (1 - c) * (1 - k)), round(255 * (1 - m) * (1 - k)), round(255 * (1 - y) * (1 - k))
     else:
         if pair == None:
             print(f"\nPlease enter valid HEX, RGB, HSL, or CMYK codes\n\nExamples:\nHex : \"#0047ab\" or \"0047ab\"\nRGB : \"rgb(0,71,171)\" or \"0,71,171\"\nHSL : \"hsl(215,100%,34%)\" or \"215,100%,34%\"\nCMYK: \"cmyk(100,58,0,33)\" or \"100,58,0,33\"\n")
@@ -113,7 +113,7 @@ subparsers = parser.add_subparsers(dest="command")
 
 info_parser = subparsers.add_parser("info", help="Shows info about a color")
 info_parser.add_argument("color", type=str, help="HEX, RGB, HSL, or CMYK of the color to see the info of")
-info_parser.add_argument("-f", "--full", help="Shows all avaliable color information, including less common color formats", action="store_true")
+info_parser.add_argument("-f", "--full", help="Shows all available color information, including less common color formats", action="store_true")
 
 
 palette_parser = subparsers.add_parser("palette", help="Manage color palettes")
@@ -388,7 +388,7 @@ elif args.command == "generator":
         generation = generator["generation"]
 
         if len(generation) == 0:
-            print("\n   No generated palette avaliable\nUse \"generator generate\" to make one\n")
+            print("\n   No generated palette available\nUse \"generator generate\" to make one\n")
             sys.exit(1)
         
         print(f"\nLast Palette Generated:\n\n{settings["name"]}:")
@@ -431,8 +431,8 @@ elif args.command == "generator":
             count = int(args.count)
             if (settings["scheme"] == "triad" and count != 3) or (settings["scheme"] == "quad" and count != 4):
                 print(f"\nCannot change count from {settings["count"]} while the {settings["scheme"].capitalize()} scheme is selected")
-            elif count < 2 or count > 100:
-                print(f"\n     Count was not changed\nCount must be between 2 and 100")
+            elif count < 2 or count > 1000:
+                print(f"\n     Count was not changed\nCount must be between 2 and 1000")
             else:
                 settings["count"] = count
         if args.name:
@@ -449,7 +449,7 @@ elif args.command == "generator":
         generation = generator["generation"].copy()
 
         if len(generation) == 0:
-            print("\n   No generated palette avaliable\nUse \"generator generate\" to make one\n")
+            print("\n   No generated palette available\nUse \"generator generate\" to make one\n")
             sys.exit(1)
 
         if args.name:
@@ -582,7 +582,7 @@ elif args.command == "generator":
         generation = generator["generation"]
 
         if len(generation) == 0:
-            print("\n   No generated palette avaliable\nUse \"generator generate\" to make one\n")
+            print("\n   No generated palette available\nUse \"generator generate\" to make one\n")
             sys.exit(1)
 
         indexes = args.indexes
@@ -623,7 +623,7 @@ elif args.command == "generator":
         generation = generator["generation"]
 
         if len(generation) == 0:
-            print("\n   No generated palette avaliable\nUse \"generator generate\" to make one\n")
+            print("\n   No generated palette available\nUse \"generator generate\" to make one\n")
             sys.exit(1)
 
         indexes = args.indexes
