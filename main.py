@@ -470,7 +470,35 @@ elif args.command == "generator":
         print("")
 
     elif args.action == "load":
-        print(load_generator())
+        palettes = load_palettes()
+        generator = load_generator()
+        settings = generator["settings"]
+        generation = generator["generation"]
+
+        new_colors = []
+
+        if len(palettes) == 0:
+            print("\nNo color palettes were found\nCreate one with \"palette create\"\n")
+            sys.exit(1)
+
+        if not(args.name in palettes):
+            print(f"\nNo color palette with the name \"{args.name}\" was found\n")
+            sys.exit(1)
+        
+        settings["name"] = args.name
+        for color in palettes[args.name]:
+            new_colors.append({"colorBox": color["colorBox"], "hex": color["hex"], "locked": False})
+        
+        generator["settings"] = settings
+        generator["generation"] = new_colors
+        save_generator(generator)
+
+        print(f"\nPalette Loaded:\n\n{settings["name"]}:")
+
+        for i, color in enumerate(new_colors):
+            print(f"[{i+1}] [{"L" if color["locked"] == True else " "}] {color["colorBox"]} {color["hex"]}")
+        print("")
+
     elif args.action == "generate":
         generator = load_generator()
         override_settings = generator["settings"].copy()
@@ -509,8 +537,8 @@ elif args.command == "generator":
             if (override_settings["scheme"] == "triad" and count != 3) or (override_settings["scheme"] == "quad" and count != 4):
                 print(f"\nCannot change count from {override_settings["count"]} while the {override_settings["scheme"].capitalize()} scheme is selected\n")
                 sys.exit(1)
-            elif count < 2 or count > 100:
-                print(f"\n     Count was not changed\nCount must be between 2 and 100\n")
+            elif count < 2 or count > 1000:
+                print(f"\n     Count was not changed\nCount must be between 2 and 1000\n")
                 sys.exit(1)
             else:
                 override_settings["count"] = count
