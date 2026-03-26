@@ -448,7 +448,7 @@ elif args.command == "generator":
         print(load_generator())
     elif args.action == "generate":
         generator = load_generator()
-        override_settings = generator["settings"]
+        override_settings = generator["settings"].copy()
         generation = generator["generation"]
 
         valid_schemes = ["random", "monochrome", "monochrome-dark", "monochrome-light", "analogic", "complement", "analogic-complement", "triad", "quad"]
@@ -524,6 +524,135 @@ elif args.command == "generator":
         print("")
 
     elif args.action == "lock":
-        print(load_generator())
+        generator = load_generator()
+        settings = generator["settings"]
+        generation = generator["generation"]
+
+        if len(generation) == 0:
+            print("\n   No generated palette avaliable\nUse \"generator generate\" to make one\n")
+            sys.exit(1)
+
+        indexes = args.indexes
+        locked_indexes = []
+
+        for index in indexes:
+            for jindex, _ in enumerate(generation):
+                if index-1 == jindex:
+                    locked_indexes.append(index)
+                    generation[jindex]["locked"] = True
+        
+        generator["generation"] = generation
+        save_generator(generator)
+
+        if len(locked_indexes) == 0:
+                print(f"\nNo colors were found at the provided indexes\n")
+                sys.exit(1)
+
+        locked_indexes_string = ""
+        locked_indexes = [str(index) for index in locked_indexes]
+        if len(locked_indexes) == 1:
+            locked_indexes_string = locked_indexes[0]
+        elif len(locked_indexes) == 2:
+            locked_indexes_string = locked_indexes[0] + " and " + locked_indexes[1]
+        elif len(locked_indexes) > 2:
+            locked_indexes_string = ", ".join(locked_indexes[:-1]) + ", and " + locked_indexes[-1]
+
+        print(f"\n{"Color" if len(locked_indexes) == 1 else "Colors"} locked at {"index" if len(locked_indexes) == 1 else "indexes"} {locked_indexes_string}")
+        
+        print(f"\nLast Palette Generated:\n\n{settings["name"]}:")
+
+        for i, color in enumerate(generation):
+            print(f"[{i+1}] [{"L" if color["locked"] == True else " "}] {color["colorBox"]} {color["hex"]}")
+        print("")
     elif args.action == "unlock":
-        print(load_generator())
+        generator = load_generator()
+        settings = generator["settings"]
+        generation = generator["generation"]
+
+        if len(generation) == 0:
+            print("\n   No generated palette avaliable\nUse \"generator generate\" to make one\n")
+            sys.exit(1)
+
+        indexes = args.indexes
+        unlocked_indexes = []
+
+        for index in indexes:
+            for jindex, _ in enumerate(generation):
+                if index-1 == jindex:
+                    unlocked_indexes.append(index)
+                    generation[jindex]["locked"] = False
+        
+        generator["generation"] = generation
+        save_generator(generator)
+
+        if len(unlocked_indexes) == 0:
+                print(f"\nNo colors were found at the provided indexes\n")
+                sys.exit(1)
+
+        unlocked_indexes_string = ""
+        unlocked_indexes = [str(index) for index in unlocked_indexes]
+        if len(unlocked_indexes) == 1:
+            unlocked_indexes_string = unlocked_indexes[0]
+        elif len(unlocked_indexes) == 2:
+            unlocked_indexes_string = unlocked_indexes[0] + " and " + unlocked_indexes[1]
+        elif len(unlocked_indexes) > 2:
+            unlocked_indexes_string = ", ".join(unlocked_indexes[:-1]) + ", and " + unlocked_indexes[-1]
+
+        print(f"\n{"Color" if len(unlocked_indexes) == 1 else "Colors"} unlocked at {"index" if len(unlocked_indexes) == 1 else "indexes"} {unlocked_indexes_string}")
+        
+        print(f"\nLast Palette Generated:\n\n{settings["name"]}:")
+
+        for i, color in enumerate(generation):
+            print(f"[{i+1}] [{"L" if color["locked"] == True else " "}] {color["colorBox"]} {color["hex"]}")
+        print("")
+
+"""
+changes = []
+            for pair in args.set:
+                try:
+                    index_string, color_string = pair.split(":")
+                    index = int(index_string)
+
+                    color = color_string.strip().lower()
+                    color_format = identifyColor(color)
+
+                    colorR, colorG, colorB = convertColorsToRGB(color, color_format, pair)
+
+                    colorHEX = f"#{colorR:02X}{colorG:02X}{colorB:02X}"
+
+                    changes.append({"index": f"{index}", "colorBox": f"\033[38;2;{colorR};{colorG};{colorB}m\u2588\u2588\033[0m", "hex": colorHEX.lower()})
+                except ValueError:
+                    print(f"\nInvalid format provided for \"{pair}\"\nPlease use the format index:color\n")
+                    sys.exit(1)
+            
+            edited_indexes = []
+
+            for change in changes:
+                for index, _ in enumerate(palettes[args.name]):
+                    if int(change["index"])-1 == index:
+                        edited_indexes.append(change["index"])
+                        palettes[args.name][index] = {"colorBox": change["colorBox"], "hex": change["hex"]}
+
+            save_palettes(palettes)
+
+            if len(edited_indexes) == 0:
+                print(f"\nNo colors were found at the provided indexes\n")
+                sys.exit(1)
+
+            edited_indexes_string = ""
+            edited_indexes = [str(index) for index in edited_indexes]
+            if len(edited_indexes) == 1:
+                edited_indexes_string = edited_indexes[0]
+            elif len(edited_indexes) == 2:
+                edited_indexes_string = edited_indexes[0] + " and " + edited_indexes[1]
+            elif len(edited_indexes) > 2:
+                edited_indexes_string = ", ".join(edited_indexes[:-1]) + ", and " + edited_indexes[-1]
+
+            print(f"\n{"Color" if len(edited_indexes) == 1 else "Colors"} edited at {"index" if len(edited_indexes) == 1 else "indexes"} {edited_indexes_string}")
+                
+
+        print(f"\nNew Color Palette:\n\n{args.name}:")
+        for i, color in enumerate(palettes[args.name]):
+            print(f"[{i+1}] {color["colorBox"]} {color["hex"]}")
+        print("")
+"""
