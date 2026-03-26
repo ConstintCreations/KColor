@@ -23,7 +23,7 @@ def load_generator():
         return {
             "settings": {
                 "base": "random",
-                "mode": "random",
+                "scheme": "random",
                 "count": 5,
                 "name": "New Palette"
             },
@@ -397,7 +397,46 @@ elif args.command == "generator":
         print("")
 
     elif args.action == "settings":
-        print(load_generator())
+        generator = load_generator()
+        settings = generator["settings"]
+
+        if args.base:
+            color_string = args.base.strip().lower()
+
+            color_format = identifyColor(color_string)
+
+            colorR, colorG, colorB = convertColorsToRGB(color_string, color_format)
+
+            colorHEX = f"#{colorR:02X}{colorG:02X}{colorB:02X}" 
+
+            settings["base"] = colorHEX.lower()
+        if args.scheme:
+            valid_schemes = ["random", "monochrome", "monochrome-dark", "monochrome-light", "analogic", "complement", "analogic-complement", "triad", "quad"]
+            scheme = args.scheme.strip().lower()
+
+            if not(scheme in valid_schemes):
+                print(f"\n        Invalid scheme provided\nPlease use one of the following schemes: \n\n{"\n".join(valid_schemes)}")
+            else:
+                settings["scheme"] = scheme
+                if scheme == "triad":
+                    settings["count"] = 3
+                elif scheme == "quad":
+                    settings["count"] = 4
+        if args.count:
+            count = int(args.count)
+            if (settings["scheme"] == "triad" and count != 3) or (settings["scheme"] == "quad" and count != 4):
+                print(f"\nCannot change count from {settings["count"]} while the {settings["scheme"].capitalize()} scheme is selected")
+            elif count < 2 or count > 100:
+                print(f"\n     Count was not changed\nCount must be between 2 and 100")
+            else:
+                settings["count"] = count
+        if args.name:
+            settings["name"] = args.name
+        
+        generator["settings"] = settings
+        save_generator(generator)
+
+        print(f"\nGenerator Settings:\n\nBase  : {"Random" if settings["base"] == "random" else settings["base"]}\nScheme: {"Random" if settings["scheme"] == "random" else f"{" ".join(word.capitalize() for word in settings["scheme"].replace("-", " ").split())}"}\nCount : {settings["count"]}\nName  : {settings["name"]}\n")
     elif args.action == "save":
         print(load_generator())
     elif args.action == "load":
