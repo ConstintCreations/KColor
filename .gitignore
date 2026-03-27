@@ -2,3 +2,4 @@
 .venv
 palettes.json
 generator.json
+dist/
