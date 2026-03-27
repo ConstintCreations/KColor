@@ -1,5 +1,5 @@
 # KColor
-KColor is a command-line tool for creating, managing, and generating color palettes made in python.
+KColor is a command-line tool for creating, managing, and generating color palettes made in Python.
 
 ### Features
  - Supports **HEX**, **RGB**, **HSL**, and **CMYK** input formats
