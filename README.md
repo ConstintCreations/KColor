@@ -12,7 +12,7 @@ KColor is a command-line tool for creating, managing, and generating color palet
  - **Colored previews** of generated colors
 
 ## Instalation
-### From TestPyPi
+### From [TestPyPi](https://test.pypi.org/project/kcolor/0.0.1/)
 ```
 pip install -i https://test.pypi.org/simple/ kcolor
 ```
